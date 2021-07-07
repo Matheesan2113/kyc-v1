@@ -1,0 +1,34 @@
+version: '3'
+services:
+  # Create frontend container
+  frontend: # Name of our service
+    build: 
+      context: ./frontend # path to dockerfile
+      dockerfile: dev.Dockerfile
+      # for some reason I can't use environment for react env frontend variables
+      args: 
+        REACT_APP_PORT: 3000
+        REACT_APP_PROXY: ${FLASK_APP_HOST}
+    ports: # Port binding to host from docker container
+      - "3000:3000" # Bind port 3000 of host to 3000 of container
+    image: dev-risk-frontend
+    container_name: dev-${CONTAINER_FRONTEND_NAME}
+    restart: always # What to do if container crashes
+  # Create backend container
+  backend:
+    # Create backend container  
+    build: 
+      context: ./backend
+      dockerfile: dev.Dockerfile
+    # expose: I should just be able to do this but for some reason nginx doesn't like just this
+    #   - "5000"
+    environment: 
+      # don't need the FLASK_APP_ but here to keep the convention needed for the frontend(react)
+      FLASK_APP_PORT: ${FLASK_APP_PORT}
+      FLASK_APP_FRONTEND: "http://localhost:3000"
+      FLASK_APP_PRODUCTION: "false"
+    ports: # could only get it to work with this
+      - "5000:5000"
+    image: dev-risk-backend
+    container_name: dev-${CONTAINER_BACKEND_NAME}
+    restart: always
